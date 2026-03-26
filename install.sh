@@ -75,6 +75,6 @@ fi
 echo ""
 export GUM="${GUM_BIN:-gum}"
 export LLKA_INSTALL_DIR="$INSTALL_DIR"
-export LLKA_OS="${OS,,}"   # lowercase
+export LLKA_OS="$(echo "$OS" | tr '[:upper:]' '[:lower:]')"
 export LLKA_ARCH="$ARCH"
 exec bash "$DEPLOY_DIR/setup.sh"
