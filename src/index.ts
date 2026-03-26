@@ -14,24 +14,25 @@ import { runUpdateMode } from './update.js'
 import { exec } from './utils.js'
 
 async function main(): Promise<void> {
+  const r = '\x1b[31m'
+  const d = '\x1b[0m'
+
   console.log('')
-  console.log('  ██╗     ██╗     ██╗  ██╗ █████╗ ')
-  console.log('  ██║     ██║     ██║ ██╔╝██╔══██╗')
-  console.log('  ██║     ██║     █████╔╝ ███████║')
-  console.log('  ██║     ██║     ██╔═██╗ ██╔══██║')
-  console.log('  ███████╗███████╗██║  ██╗██║  ██║')
-  console.log('  ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝')
+  console.log(`  ${r}██╗     ██╗     ██╗  ██╗ █████╗${d} `)
+  console.log(`  ${r}██║     ██║     ██║ ██╔╝██╔══██╗${d}`)
+  console.log(`  ${r}██║     ██║     █████╔╝ ███████║${d}`)
+  console.log(`  ${r}██║     ██║     ██╔═██╗ ██╔══██║${d}`)
+  console.log(`  ${r}███████╗███████╗██║  ██╗██║  ██║${d}`)
+  console.log(`  ${r}╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝${d}`)
   console.log('')
 
-  p.intro('leih.lokal — Library of Things Management System')
+  p.intro('leih.lokal — Library of Things')
 
   p.log.message('')
-  p.log.message('  The LLKA stack:')
-  p.log.message('    LLKA-B  PocketBase backend (API & database)')
-  p.log.message('    LLKA-V  Management UI (items, customers & rentals)')
-  p.log.message('    LLKA-R  Public reservation portal (optional)')
-  p.log.message('')
-  p.log.message(`  Install directory: ${INSTALL_DIR}`)
+  p.log.message('  So you want to join the lending library revolution.')
+  p.log.message('  We\'re game. This installer will walk you through')
+  p.log.message('  setting up everything you need to manage your')
+  p.log.message('  library of things — from backend to public portal.')
   p.log.message('')
 
   const platform = detectPlatform()
