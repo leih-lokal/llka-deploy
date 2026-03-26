@@ -1,0 +1,33 @@
+{
+  "name": "llka-deploy",
+  "version": "0.1.0",
+  "description": "One-command installer for the leih.lokal stack",
+  "type": "module",
+  "bin": {
+    "llka-deploy": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsup",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0"
+  },
+  "keywords": ["leih-lokal", "installer", "pocketbase", "library-of-things"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leih-lokal/llka-deploy"
+  },
+  "license": "MIT"
+}

@@ -5,13 +5,8 @@ One-command installer for the [leih.lokal](https://leihlokal-ka.de) stack — a 
 ## Quick Start
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/leih-lokal/llka-deploy/main/install.sh | bash
+npx llka-deploy
 ```
-
-This will:
-1. Download a TUI tool ([gum](https://github.com/charmbracelet/gum)) for interactive prompts
-2. Clone this repo
-3. Walk you through setting up your leih.lokal
 
 ## What Gets Installed
 
@@ -42,17 +37,13 @@ Everything is installed to `~/.leihlokal/`.
 
 ## Updating
 
-Just run the installer again:
+Just run it again:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/leih-lokal/llka-deploy/main/install.sh | bash
+npx llka-deploy@latest
 ```
 
 It detects your existing installation and offers to update, reconfigure, or start fresh.
-
-## Configuration
-
-All settings are saved to `~/.leihlokal/config.env`. The installer reads this file on re-runs to detect existing installations and preserve your choices.
 
 ## Networking Options
 
@@ -69,22 +60,14 @@ macOS works for local testing but is not recommended for production:
 - No Cloudflare Tunnel setup
 - Caddy works but won't be registered as a service
 
-## Project Structure
+## Development
 
-```
-llka-deploy/
-├── install.sh         # Bootstrap (curl target)
-├── setup.sh           # Main orchestrator
-├── lib/
-│   ├── common.sh      # Shared utilities
-│   ├── detect.sh      # OS/arch detection
-│   ├── prerequisites.sh
-│   ├── pocketbase.sh
-│   ├── apps.sh
-│   ├── admin.sh
-│   ├── networking.sh
-│   └── services.sh
-└── templates/         # systemd units, Caddyfile
+```bash
+git clone https://github.com/leih-lokal/llka-deploy
+cd llka-deploy
+npm install
+npm run dev    # Run directly via tsx
+npm run build  # Build for distribution
 ```
 
 ## Related Repos
