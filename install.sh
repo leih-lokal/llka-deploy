@@ -56,7 +56,7 @@ if ! curl -fsSL "$GUM_URL" -o "$GUM_TMP/$GUM_TARBALL"; then
     GUM_BIN=""
 else
     tar -xzf "$GUM_TMP/$GUM_TARBALL" -C "$GUM_TMP"
-    GUM_BIN="$GUM_TMP/gum"
+    GUM_BIN="$(find "$GUM_TMP" -name gum -type f | head -1)"
     chmod +x "$GUM_BIN"
 fi
 
