@@ -1,0 +1,15 @@
+[Unit]
+Description=leih.lokal Admin UI (llka-verwaltung)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env node {{INSTALL_DIR}}/apps/llka-verwaltung/.next/standalone/server.js
+WorkingDirectory={{INSTALL_DIR}}/apps/llka-verwaltung/.next/standalone
+Restart=on-failure
+RestartSec=5
+Environment=PORT=3000
+Environment=HOSTNAME=0.0.0.0
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=leih.lokal Cloudflare Tunnel
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env cloudflared tunnel --config {{INSTALL_DIR}}/cloudflared-config.yml run
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

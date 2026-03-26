@@ -1,0 +1,13 @@
+[Unit]
+Description=leih.lokal Caddy Reverse Proxy
+After=network.target
+
+[Service]
+Type=simple
+ExecStart={{INSTALL_DIR}}/caddy/caddy run --config {{INSTALL_DIR}}/caddy/Caddyfile
+WorkingDirectory={{INSTALL_DIR}}/caddy
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=leih.lokal PocketBase Backend
+After=network.target
+
+[Service]
+Type=simple
+ExecStart={{INSTALL_DIR}}/pocketbase/pocketbase serve --http=0.0.0.0:8090 --dir={{INSTALL_DIR}}/pocketbase/pb_data --hooksDir={{INSTALL_DIR}}/pocketbase/pb_hooks --migrationsDir={{INSTALL_DIR}}/pocketbase/pb_migrations
+WorkingDirectory={{INSTALL_DIR}}/pocketbase
+Restart=on-failure
+RestartSec=5
+Environment=DRY_MODE=false
+
+[Install]
+WantedBy=default.target

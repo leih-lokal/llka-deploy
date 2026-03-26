@@ -1,0 +1,17 @@
+{{DOMAIN}} {
+    handle /reservierung/* {
+        reverse_proxy localhost:3001
+    }
+
+    handle /_/* {
+        reverse_proxy localhost:8090
+    }
+
+    handle /api/* {
+        reverse_proxy localhost:8090
+    }
+
+    handle {
+        reverse_proxy localhost:3000
+    }
+}

@@ -1,0 +1,15 @@
+[Unit]
+Description=leih.lokal Reservation Frontend (llka-resomaker)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env node {{INSTALL_DIR}}/apps/llka-resomaker/.next/standalone/server.js
+WorkingDirectory={{INSTALL_DIR}}/apps/llka-resomaker/.next/standalone
+Restart=on-failure
+RestartSec=5
+Environment=PORT=3001
+Environment=HOSTNAME=0.0.0.0
+
+[Install]
+WantedBy=default.target
