@@ -28,12 +28,12 @@ async function main(): Promise<void> {
 
   p.intro('leih.lokal — Library of Things')
 
-  p.log.message('')
-  p.log.message('  So you want to join the lending library revolution.')
-  p.log.message('  We\'re game. This installer will walk you through')
-  p.log.message('  setting up everything you need to manage your')
-  p.log.message('  library of things — from backend to public portal.')
-  p.log.message('')
+  p.log.message(
+    '  So you want to join the lending library revolution.\n' +
+    '  We\'re game. This installer will walk you through\n' +
+    '  setting up everything you need to manage your\n' +
+    '  library of things — from backend to public portal.'
+  )
 
   const platform = detectPlatform()
 
