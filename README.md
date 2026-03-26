@@ -1,64 +1,85 @@
-# LLKA-D (llka-deploy)
+```
+██╗     ██╗     ██╗  ██╗ █████╗
+██║     ██║     ██║ ██╔╝██╔══██╗
+██║     ██║     █████╔╝ ███████║
+██║     ██║     ██╔═██╗ ██╔══██║
+███████╗███████╗██║  ██╗██║  ██║
+╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝
+```
 
-One-command installer for the [leih.lokal](https://leihlokal-ka.de) stack — a management system for Libraries of Things (Leihladen).
+# llka-deploy
 
-## Quick Start
+One-command installer for [leih.lokal](https://leihlokal-ka.de) — a management system for Libraries of Things (*Leihladen*).
 
 ```bash
 npx llka-deploy
 ```
 
-## What Gets Installed
+That's it. The interactive installer walks you through everything.
 
-| Component | Description | Port |
+## The LLKA Stack
+
+| Component | What it does | Port |
 |-----------|-------------|------|
-| **leihbackend** | PocketBase backend (API + database) | 8090 |
-| **llka-verwaltung** | Admin UI for managing items, customers, rentals | 3000 |
-| **llka-resomaker** | Public reservation page (optional) | 3001 |
+| **LLKA-B** | PocketBase backend — API, database, auth, hooks | 8090 |
+| **LLKA-V** | Management UI — items, customers, rentals | 3000 |
+| **LLKA-R** | Public reservation portal *(optional)* | 3001 |
 
 Everything is installed to `~/.leihlokal/`.
-
-## Requirements
-
-- **Linux** (recommended) or macOS (testing only — no systemd)
-- **Node.js 20+** (Bun auto-detected and preferred if available)
-- **git** and **curl**
 
 ## What the Installer Does
 
 1. **Component selection** — choose which parts of the stack to install
-2. **Configuration** — name, opening hours, domain
-3. **Prerequisites check** — verifies git, curl, Node.js
-4. **PocketBase** — downloads the latest binary for your platform
-5. **Apps** — clones and builds the selected frontend apps
-6. **Admin setup** — creates your PocketBase superuser and seeds initial settings
+2. **Configuration** — name your library, set opening hours, configure your domain
+3. **Prerequisites check** — verifies git, curl, Node.js 20+
+4. **LLKA-B** — downloads the latest PocketBase binary for your platform
+5. **LLKA-V / LLKA-R** — clones, configures `.env.local`, and builds the Next.js apps
+6. **Admin setup** — creates your superuser, seeds settings, configures email templates
 7. **Networking** — optionally sets up Caddy (auto-HTTPS) or Cloudflare Tunnel
-8. **Services** — registers systemd user services (Linux) so everything starts on boot
+8. **Services** — registers systemd (Linux) or launchd (macOS) services for auto-start
+9. **CLAUDE.md** — generates an agent-readable config file for AI-assisted maintenance
+
+## Requirements
+
+- **Linux** or **macOS**
+- **Node.js 20+** (Bun auto-detected and preferred if available)
+- **git** and **curl**
 
 ## Updating
-
-Just run it again:
 
 ```bash
 npx llka-deploy@latest
 ```
 
-It detects your existing installation and offers to update, reconfigure, or start fresh.
+The installer detects your existing installation and offers to update, reconfigure, start fresh, or uninstall.
 
-## Networking Options
+## Networking
 
 When you provide a domain name, the installer offers three options:
 
-- **Caddy** (recommended) — downloads Caddy, generates a Caddyfile, handles HTTPS automatically
-- **Cloudflare Tunnel** — if you have a Cloudflare account, sets up a tunnel with `cloudflared`
-- **Manual** — prints port map and example configs for Caddy and Nginx
+- **Caddy** *(recommended)* — downloads Caddy, generates a Caddyfile, handles HTTPS automatically
+- **Cloudflare Tunnel** — sets up a tunnel with `cloudflared` for Cloudflare-managed domains
+- **Manual** — prints the port map and example reverse proxy configs
 
-## macOS Limitations
+Without a domain, everything runs on localhost.
 
-macOS works for local testing but is not recommended for production:
-- No systemd — services won't auto-start (manual start commands are printed)
-- No Cloudflare Tunnel setup
-- Caddy works but won't be registered as a service
+## Platform Support
+
+| | Linux | macOS |
+|---|---|---|
+| Services | systemd (auto-start, auto-restart) | launchd (auto-start, auto-restart) |
+| Logs | `journalctl --user -u leihbackend` | `~/.leihlokal/logs/` |
+| Networking | Caddy, Cloudflare Tunnel, manual | Caddy, manual |
+| Production | Yes | Testing recommended |
+
+## Uninstalling
+
+```bash
+npx llka-deploy
+# Select "Uninstall"
+```
+
+Stops all services, deregisters service files, and removes `~/.leihlokal/`.
 
 ## Development
 
@@ -70,8 +91,14 @@ npm run dev    # Run directly via tsx
 npm run build  # Build for distribution
 ```
 
+**Tech stack:** TypeScript, [@clack/prompts](https://github.com/bombshell-dev/clack) (TUI), [tsup](https://github.com/egoist/tsup) (bundler), Node.js built-ins for everything else.
+
 ## Related Repos
 
-- [leihbackend](https://github.com/leih-lokal/leihbackend) — PocketBase backend
-- [llka-verwaltung](https://github.com/leih-lokal/llka-verwaltung) — Admin UI
-- [llka-resomaker](https://github.com/leih-lokal/llka-resomaker) — Public reservation page
+- [leih-lokal/leihbackend](https://github.com/leih-lokal/leihbackend) — LLKA-B: PocketBase backend, hooks, migrations
+- [leih-lokal/llka-verwaltung](https://github.com/leih-lokal/llka-verwaltung) — LLKA-V: Next.js management UI
+- [leih-lokal/llka-resomaker](https://github.com/leih-lokal/llka-resomaker) — LLKA-R: Next.js reservation portal
+
+## License
+
+MIT
