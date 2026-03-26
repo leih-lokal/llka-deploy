@@ -69,7 +69,7 @@ function printMacOSCommands(): void {
   p.log.message('')
   p.log.message('  Start services manually:')
   p.log.message('')
-  p.log.message(`  # PocketBase`)
+  p.log.message(`  # LLKA-B`)
   p.log.message(`  ${INSTALL_DIR}/pocketbase/pocketbase serve \\`)
   p.log.message(`    --dir=${INSTALL_DIR}/pocketbase/pb_data \\`)
   p.log.message(`    --hooksDir=${INSTALL_DIR}/pocketbase/pb_hooks \\`)
@@ -77,13 +77,13 @@ function printMacOSCommands(): void {
 
   if (components.includes('llka-verwaltung')) {
     p.log.message('')
-    p.log.message(`  # Admin UI`)
+    p.log.message(`  # LLKA-V`)
     p.log.message(`  cd ${INSTALL_DIR}/apps/llka-verwaltung/.next/standalone && PORT=3000 node server.js &`)
   }
 
   if (components.includes('llka-resomaker')) {
     p.log.message('')
-    p.log.message(`  # Reservation page`)
+    p.log.message(`  # LLKA-R`)
     p.log.message(`  cd ${INSTALL_DIR}/apps/llka-resomaker/.next/standalone && PORT=3001 node server.js &`)
   }
 }

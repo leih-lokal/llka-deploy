@@ -47,7 +47,7 @@ function setupLeihbackend(): void {
   setupPocketBaseFiles(`${tmpDir}/leihbackend`)
 
   exec(`rm -rf "${tmpDir}"`)
-  p.log.success('leihbackend configured')
+  p.log.success('LLKA-B configured')
 }
 
 function setupVerwaltung(): void {
@@ -63,9 +63,9 @@ function setupVerwaltung(): void {
   }
 
   const s = p.spinner()
-  s.start('Building llka-verwaltung (this may take a few minutes)...')
+  s.start('Building LLKA-V (this may take a few minutes)...')
   buildApp(appDir, env)
-  s.stop('llka-verwaltung built')
+  s.stop('LLKA-V built')
 }
 
 function setupResomaker(): void {
@@ -85,9 +85,9 @@ function setupResomaker(): void {
   }
 
   const s = p.spinner()
-  s.start('Building llka-resomaker (this may take a few minutes)...')
+  s.start('Building LLKA-R (this may take a few minutes)...')
   buildApp(appDir, env)
-  s.stop('llka-resomaker built')
+  s.stop('LLKA-R built')
 
   // Handle standalone asset copy if needed
   const standaloneDir = resolve(appDir, '.next', 'standalone')

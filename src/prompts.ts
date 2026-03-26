@@ -24,9 +24,9 @@ export async function runPrompts(): Promise<InstallConfig> {
   const components = await p.multiselect({
     message: 'Which components do you want to install?',
     options: [
-      { value: 'leihbackend', label: 'leihbackend (PocketBase backend)', hint: 'required' },
-      { value: 'llka-verwaltung', label: 'llka-verwaltung (Admin UI)', hint: 'recommended' },
-      { value: 'llka-resomaker', label: 'llka-resomaker (Public reservation page)', hint: 'optional' },
+      { value: 'leihbackend', label: 'LLKA-B — Backend system', hint: 'required' },
+      { value: 'llka-verwaltung', label: 'LLKA-V — Management UI', hint: 'recommended' },
+      { value: 'llka-resomaker', label: 'LLKA-R — Reservation portal', hint: 'optional' },
     ],
     initialValues: ['leihbackend', 'llka-verwaltung'],
     required: true,
