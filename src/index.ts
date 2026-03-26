@@ -37,8 +37,7 @@ async function main(): Promise<void> {
   const platform = detectPlatform()
 
   if (platform.isMacOS) {
-    p.log.warn('macOS detected. This works for testing but is not recommended')
-    p.log.message('  for production. Systemd service registration is not available.')
+    p.log.info('macOS detected — services will be managed via launchd.')
   }
 
   // Check for existing installation
@@ -67,7 +66,7 @@ async function main(): Promise<void> {
   await setupNetworking(platform)
   setupServices(platform)
   await runHealthCheck()
-  generateClaudeMd()
+  generateClaudeMd(platform)
   printNextSteps()
 
   p.outro('leih.lokal is ready!')
@@ -157,7 +156,7 @@ function printNextSteps(): void {
   p.log.message('  help with maintenance, updates, and configuration.')
 }
 
-function generateClaudeMd(): void {
+function generateClaudeMd(platform: import('./detect.js').Platform): void {
   const appName = configRead('LLKA_APP_NAME', 'leih.lokal')
   const domain = configRead('LLKA_DOMAIN', '')
   const components = configRead('LLKA_COMPONENTS', 'leihbackend,llka-verwaltung')
@@ -168,6 +167,35 @@ function generateClaudeMd(): void {
 
   const hasV = components.includes('llka-verwaltung')
   const hasR = components.includes('llka-resomaker')
+  const isMac = platform.isMacOS
+
+  // Service management commands differ by platform
+  const svcMgr = isMac ? 'launchd' : 'systemd'
+
+  const restartCmds = isMac
+    ? `launchctl unload ~/Library/LaunchAgents/de.leihlokal.backend.plist && launchctl load ~/Library/LaunchAgents/de.leihlokal.backend.plist
+${hasV ? 'launchctl unload ~/Library/LaunchAgents/de.leihlokal.verwaltung.plist && launchctl load ~/Library/LaunchAgents/de.leihlokal.verwaltung.plist\n' : ''}${hasR ? 'launchctl unload ~/Library/LaunchAgents/de.leihlokal.resomaker.plist && launchctl load ~/Library/LaunchAgents/de.leihlokal.resomaker.plist\n' : ''}`
+    : `systemctl --user restart leihbackend
+${hasV ? 'systemctl --user restart llka-verwaltung\n' : ''}${hasR ? 'systemctl --user restart llka-resomaker\n' : ''}`
+
+  const statusCmds = isMac
+    ? `launchctl list | grep leihlokal`
+    : `systemctl --user status leihbackend
+${hasV ? 'systemctl --user status llka-verwaltung\n' : ''}${hasR ? 'systemctl --user status llka-resomaker\n' : ''}`
+
+  const logCmds = isMac
+    ? `tail -f ${INSTALL_DIR}/logs/leihbackend.log
+${hasV ? `tail -f ${INSTALL_DIR}/logs/llka-verwaltung.log\n` : ''}${hasR ? `tail -f ${INSTALL_DIR}/logs/llka-resomaker.log\n` : ''}`
+    : `journalctl --user -u leihbackend -f
+${hasV ? 'journalctl --user -u llka-verwaltung -f\n' : ''}${hasR ? 'journalctl --user -u llka-resomaker -f\n' : ''}`
+
+  const restartAfterRebuildV = isMac
+    ? 'launchctl unload ~/Library/LaunchAgents/de.leihlokal.verwaltung.plist && launchctl load ~/Library/LaunchAgents/de.leihlokal.verwaltung.plist'
+    : 'systemctl --user restart llka-verwaltung'
+
+  const restartAfterRebuildR = isMac
+    ? 'launchctl unload ~/Library/LaunchAgents/de.leihlokal.resomaker.plist && launchctl load ~/Library/LaunchAgents/de.leihlokal.resomaker.plist'
+    : 'systemctl --user restart llka-resomaker'
 
   const content = `# ${appName} — LLKA Installation
 
@@ -190,9 +218,11 @@ ${hasV ? `- LLKA-V: ${domain ? `${baseUrl}/` : `${baseUrl}:3000`}\n` : ''}${hasR
 - **Database**: \`${INSTALL_DIR}/pocketbase/pb_data/data.db\` — SQLite, back this up
 - **PB Hooks**: \`${INSTALL_DIR}/pocketbase/pb_hooks/\` — server-side JS hooks
 - **PB Migrations**: \`${INSTALL_DIR}/pocketbase/pb_migrations/\` — schema migrations
-${hasV ? `- **LLKA-V env**: \`${INSTALL_DIR}/apps/llka-verwaltung/.env.local\`\n` : ''}${hasR ? `- **LLKA-R env**: \`${INSTALL_DIR}/apps/llka-resomaker/.env.local\`\n` : ''}${networking === 'caddy' ? `- **Caddyfile**: \`${INSTALL_DIR}/caddy/Caddyfile\`\n` : ''}${networking === 'cloudflared' ? `- **Tunnel config**: \`${INSTALL_DIR}/cloudflared-config.yml\`\n` : ''}
+${hasV ? `- **LLKA-V env**: \`${INSTALL_DIR}/apps/llka-verwaltung/.env.local\`\n` : ''}${hasR ? `- **LLKA-R env**: \`${INSTALL_DIR}/apps/llka-resomaker/.env.local\`\n` : ''}${networking === 'caddy' ? `- **Caddyfile**: \`${INSTALL_DIR}/caddy/Caddyfile\`\n` : ''}${networking === 'cloudflared' ? `- **Tunnel config**: \`${INSTALL_DIR}/cloudflared-config.yml\`\n` : ''}${isMac ? `- **Logs**: \`${INSTALL_DIR}/logs/\`\n` : ''}
 ## Runtime
 
+- **Platform**: ${platform.os} ${platform.arch}
+- **Service manager**: ${svcMgr}
 - **Runtime**: ${runtime}
 - **Networking**: ${networking}
 ${domain ? `- **Domain**: ${domain}\n` : '- **Domain**: none (localhost only)\n'}
@@ -204,20 +234,17 @@ npx llka-deploy@latest
 # Select "Update all components"
 \`\`\`
 
-### Restart services (Linux)
+### Restart services
 \`\`\`bash
-systemctl --user restart leihbackend
-${hasV ? 'systemctl --user restart llka-verwaltung\n' : ''}${hasR ? 'systemctl --user restart llka-resomaker\n' : ''}\`\`\`
+${restartCmds}\`\`\`
 
-### Check service status (Linux)
+### Check service status
 \`\`\`bash
-systemctl --user status leihbackend
-${hasV ? 'systemctl --user status llka-verwaltung\n' : ''}${hasR ? 'systemctl --user status llka-resomaker\n' : ''}\`\`\`
+${statusCmds}\`\`\`
 
-### View logs (Linux)
+### View logs
 \`\`\`bash
-journalctl --user -u leihbackend -f
-${hasV ? 'journalctl --user -u llka-verwaltung -f\n' : ''}${hasR ? 'journalctl --user -u llka-resomaker -f\n' : ''}\`\`\`
+${logCmds}\`\`\`
 
 ### Back up the database
 \`\`\`bash
@@ -228,14 +255,14 @@ cp ${INSTALL_DIR}/pocketbase/pb_data/data.db ~/data-backup-$(date +%Y%m%d).db
 \`\`\`bash
 cd ${INSTALL_DIR}/apps/llka-verwaltung
 ${runtime === 'bun' ? 'bun run build' : 'npm run build'}
-systemctl --user restart llka-verwaltung  # Linux only
+${restartAfterRebuildV}
 \`\`\`
 
 ${hasR ? `### Rebuild LLKA-R after config change
 \`\`\`bash
 cd ${INSTALL_DIR}/apps/llka-resomaker
 ${runtime === 'bun' ? 'bun run build' : 'npm run build'}
-systemctl --user restart llka-resomaker  # Linux only
+${restartAfterRebuildR}
 \`\`\`
 ` : ''}
 ### PocketBase API
