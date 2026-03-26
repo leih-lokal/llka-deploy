@@ -275,11 +275,38 @@ collection holds the app config (name, tagline, opening hours, colors).
 - **API import**: POST to \`${baseUrl}:8090/api/collections/{collection}/records\`
 - **Direct SQL**: \`sqlite3 ${INSTALL_DIR}/pocketbase/pb_data/data.db\`
 
+## Upstream Repositories
+
+These are the source repos for each component. Check them for docs, issues, and updates:
+
+- **LLKA-B**: [leih-lokal/leihbackend](https://github.com/leih-lokal/leihbackend) — PocketBase backend, hooks, migrations
+- **LLKA-V**: [leih-lokal/llka-verwaltung](https://github.com/leih-lokal/llka-verwaltung) — Next.js management UI
+- **LLKA-R**: [leih-lokal/llka-resomaker](https://github.com/leih-lokal/llka-resomaker) — Next.js reservation portal
+- **Installer**: [leih-lokal/llka-deploy](https://github.com/leih-lokal/llka-deploy) — This installer (\`npx llka-deploy\`)
+
 ## Caution
 
 - Always back up \`pb_data/data.db\` before making schema changes
 - The \`NEXT_PUBLIC_*\` env vars in \`.env.local\` are baked in at build time — rebuild after changing them
 - PocketBase hooks in \`pb_hooks/\` are loaded at startup — restart LLKA-B after editing
+
+## Agent Directives
+
+**Keep this file up to date.** If you make any change to this installation — config
+edits, rebuilds, service changes, new collections, domain changes, dependency updates —
+update this CLAUDE.md to reflect the current state. This file is the source of truth for
+agents working on this installation.
+
+**Do not trust this file blindly.** The operator may have made manual changes to config
+files, the database, services, or environment variables outside of \`llka-deploy\`. Before
+acting on information in this file, verify the actual state:
+- Check \`config.env\` for current config values
+- Check running services (\`${isMac ? 'launchctl list | grep leihlokal' : 'systemctl --user list-units | grep llka'}\`)
+- Check \`.env.local\` files for actual env vars
+- Check the database schema via PocketBase admin or API
+- Check upstream repos for breaking changes before updating
+
+If you find a discrepancy between this file and reality, update this file to match reality.
 `
 
   writeFileSync(resolve(INSTALL_DIR, 'CLAUDE.md'), content)
