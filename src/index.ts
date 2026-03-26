@@ -136,27 +136,31 @@ function printNextSteps(): void {
   const components = configRead('LLKA_COMPONENTS', 'leihbackend,llka-verwaltung')
   const baseUrl = domain ? `https://${domain}` : 'http://localhost'
 
-  p.log.message('')
   p.log.step('Next steps')
-  p.log.message('')
-  p.log.message('  1. Log into LLKA-V to configure your leih.lokal:')
-  p.log.message(`     ${domain ? `${baseUrl}/` : `${baseUrl}:3000`}`)
-  p.log.message('     Set up categories, add items, configure your branding.')
-  p.log.message('')
-  p.log.message('  2. Import existing data (if you have any):')
-  p.log.message(`     Use the LLKA-B admin UI at ${baseUrl}:8090/_/`)
-  p.log.message('     You can import via CSV, the API, or direct SQL on the')
-  p.log.message(`     SQLite database at ${INSTALL_DIR}/pocketbase/pb_data/data.db`)
-  p.log.message('')
+
+  p.log.message(
+    '  1. Log into LLKA-V to configure your leih.lokal:\n' +
+    `     ${domain ? `${baseUrl}/` : `${baseUrl}:3000`}\n` +
+    '     Set up categories, add items, configure your branding.'
+  )
+  p.log.message(
+    '  2. Import existing data (if you have any):\n' +
+    `     Use the LLKA-B admin UI at ${baseUrl}:8090/_/\n` +
+    '     You can import via CSV, the API, or direct SQL on the\n' +
+    `     SQLite database at ${INSTALL_DIR}/pocketbase/pb_data/data.db`
+  )
   if (components.includes('llka-resomaker')) {
-    p.log.message('  3. Share your reservation page with users:')
-    p.log.message(`     ${domain ? `${baseUrl}/reservierung` : `${baseUrl}:3001`}`)
-    p.log.message('')
+    p.log.message(
+      '  3. Share your reservation page with users:\n' +
+      `     ${domain ? `${baseUrl}/reservierung` : `${baseUrl}:3001`}`
+    )
   }
-  p.log.message('  A CLAUDE.md has been generated at:')
-  p.log.message(`  ${INSTALL_DIR}/CLAUDE.md`)
-  p.log.message('  Point an AI agent at your install directory and it can')
-  p.log.message('  help with maintenance, updates, and configuration.')
+  p.log.message(
+    `  A CLAUDE.md has been generated at:\n` +
+    `  ${INSTALL_DIR}/CLAUDE.md\n` +
+    '  Point an AI agent at your install directory and it can\n' +
+    '  help with maintenance, updates, and configuration.'
+  )
 }
 
 function generateClaudeMd(platform: import('./detect.js').Platform): void {
