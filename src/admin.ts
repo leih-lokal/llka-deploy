@@ -18,10 +18,15 @@ function startPocketBase(): void {
   p.log.info('Starting PocketBase...')
   pbProcess = spawn(pbBin, [
     'serve',
+    '--http=127.0.0.1:8090',
     `--dir=${resolve(pbDir, 'pb_data')}`,
     `--hooksDir=${resolve(pbDir, 'pb_hooks')}`,
     `--migrationsDir=${resolve(pbDir, 'pb_migrations')}`,
-  ], { stdio: 'ignore', detached: true })
+  ], {
+    stdio: 'ignore',
+    detached: true,
+    env: { ...process.env, OPEN_BROWSER: '0' },
+  })
 
   // Wait for PocketBase to be ready
   let attempts = 0
@@ -210,11 +215,15 @@ function configureEmailTemplates(token: string): void {
 }
 
 export async function runAdminSetup(): Promise<void> {
+  // Prompt and create superuser via CLI first (no server needed)
+  // This prevents PocketBase from showing the "setup" screen in the browser
+  const { email, password } = await promptAdminCredentials()
+  createSuperuser(email, password)
+
+  // Now start PB for API calls (seeding, email templates)
   startPocketBase()
 
   try {
-    const { email, password } = await promptAdminCredentials()
-    createSuperuser(email, password)
     const token = getAuthToken(email, password)
     createSettingsCollection(token)
     seedSettings(token)
