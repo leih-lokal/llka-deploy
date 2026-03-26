@@ -44,10 +44,12 @@ async function main(): Promise<void> {
   if (configExists()) {
     const result = await runUpdateMode(platform)
     if (result === 'update') {
-      // Update already performed in runUpdateMode
       await runHealthCheck()
       p.outro('Update complete!')
       return
+    }
+    if (result === 'uninstall') {
+      return // performUninstall already exits, but just in case
     }
     // 'reconfigure' and 'fresh' fall through to fresh install
   }

@@ -1,5 +1,5 @@
 import * as p from '@clack/prompts'
-import { writeFileSync, existsSync } from 'node:fs'
+import { writeFileSync, existsSync, rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { homedir } from 'node:os'
 import { INSTALL_DIR, configRead } from './config.js'
@@ -217,20 +217,54 @@ export function stopAllServices(platform: Platform): void {
   p.log.success('Services stopped')
 }
 
-function stopLaunchdServices(): void {
-  const labels = [
-    'de.leihlokal.backend',
-    'de.leihlokal.verwaltung',
-    'de.leihlokal.resomaker',
-    'de.leihlokal.caddy',
-    'de.leihlokal.cloudflared',
-  ]
+export function unregisterAllServices(platform: Platform): void {
+  stopAllServices(platform)
 
-  for (const label of labels) {
+  if (platform.isMacOS) {
+    removeLaunchdServices()
+  } else {
+    removeSystemdServices()
+  }
+}
+
+const SYSTEMD_SERVICE_NAMES = ['leihbackend', 'llka-verwaltung', 'llka-resomaker', 'caddy', 'cloudflared']
+
+const LAUNCHD_LABELS = [
+  'de.leihlokal.backend',
+  'de.leihlokal.verwaltung',
+  'de.leihlokal.resomaker',
+  'de.leihlokal.caddy',
+  'de.leihlokal.cloudflared',
+]
+
+function stopLaunchdServices(): void {
+  for (const label of LAUNCHD_LABELS) {
     const plistPath = resolve(LAUNCH_AGENTS_DIR, `${label}.plist`)
     if (existsSync(plistPath)) {
       try { exec(`launchctl unload "${plistPath}"`) } catch { /* not loaded */ }
     }
   }
   p.log.success('Services stopped')
+}
+
+function removeLaunchdServices(): void {
+  for (const label of LAUNCHD_LABELS) {
+    const plistPath = resolve(LAUNCH_AGENTS_DIR, `${label}.plist`)
+    if (existsSync(plistPath)) {
+      rmSync(plistPath)
+      p.log.success(`Removed ${label}.plist`)
+    }
+  }
+}
+
+function removeSystemdServices(): void {
+  for (const name of SYSTEMD_SERVICE_NAMES) {
+    try { exec(`systemctl --user disable ${name}`) } catch { /* may not exist */ }
+    const unitPath = resolve(SYSTEMD_USER_DIR, `${name}.service`)
+    if (existsSync(unitPath)) {
+      rmSync(unitPath)
+      p.log.success(`Removed ${name}.service`)
+    }
+  }
+  try { exec('systemctl --user daemon-reload') } catch { /* best effort */ }
 }
