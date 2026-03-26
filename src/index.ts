@@ -1,4 +1,6 @@
 import * as p from '@clack/prompts'
+import { writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { configExists, configWrite, configRead, INSTALL_DIR } from './config.js'
 import { detectPlatform } from './detect.js'
 import { checkPrerequisites } from './prerequisites.js'
@@ -65,6 +67,8 @@ async function main(): Promise<void> {
   await setupNetworking(platform)
   setupServices(platform)
   await runHealthCheck()
+  generateClaudeMd()
+  printNextSteps()
 
   p.outro('leih.lokal is ready!')
 }
@@ -123,6 +127,136 @@ async function runHealthCheck(): Promise<void> {
     }
     p.log.message(`    LLKA-B  https://${domain}/_/`)
   }
+}
+
+function printNextSteps(): void {
+  const domain = configRead('LLKA_DOMAIN', '')
+  const components = configRead('LLKA_COMPONENTS', 'leihbackend,llka-verwaltung')
+  const baseUrl = domain ? `https://${domain}` : 'http://localhost'
+
+  p.log.message('')
+  p.log.step('Next steps')
+  p.log.message('')
+  p.log.message('  1. Log into LLKA-V to configure your leih.lokal:')
+  p.log.message(`     ${domain ? `${baseUrl}/` : `${baseUrl}:3000`}`)
+  p.log.message('     Set up categories, add items, configure your branding.')
+  p.log.message('')
+  p.log.message('  2. Import existing data (if you have any):')
+  p.log.message(`     Use the LLKA-B admin UI at ${baseUrl}:8090/_/`)
+  p.log.message('     You can import via CSV, the API, or direct SQL on the')
+  p.log.message(`     SQLite database at ${INSTALL_DIR}/pocketbase/pb_data/data.db`)
+  p.log.message('')
+  if (components.includes('llka-resomaker')) {
+    p.log.message('  3. Share your reservation page with users:')
+    p.log.message(`     ${domain ? `${baseUrl}/reservierung` : `${baseUrl}:3001`}`)
+    p.log.message('')
+  }
+  p.log.message('  A CLAUDE.md has been generated at:')
+  p.log.message(`  ${INSTALL_DIR}/CLAUDE.md`)
+  p.log.message('  Point an AI agent at your install directory and it can')
+  p.log.message('  help with maintenance, updates, and configuration.')
+}
+
+function generateClaudeMd(): void {
+  const appName = configRead('LLKA_APP_NAME', 'leih.lokal')
+  const domain = configRead('LLKA_DOMAIN', '')
+  const components = configRead('LLKA_COMPONENTS', 'leihbackend,llka-verwaltung')
+  const networking = configRead('LLKA_NETWORKING', 'none')
+  const runtime = configRead('LLKA_RUNTIME', 'node')
+  const adminEmail = configRead('LLKA_ADMIN_EMAIL', '')
+  const baseUrl = domain ? `https://${domain}` : 'http://localhost'
+
+  const hasV = components.includes('llka-verwaltung')
+  const hasR = components.includes('llka-resomaker')
+
+  const content = `# ${appName} — LLKA Installation
+
+This is an LLKA (leih.lokal) installation managed by \`llka-deploy\`.
+
+## Architecture
+
+| Component | Description | Port | Directory |
+|-----------|-------------|------|-----------|
+| **LLKA-B** | PocketBase backend (API + SQLite database) | 8090 | \`${INSTALL_DIR}/pocketbase/\` |
+${hasV ? `| **LLKA-V** | Management UI (Next.js) | 3000 | \`${INSTALL_DIR}/apps/llka-verwaltung/\` |\n` : ''}${hasR ? `| **LLKA-R** | Public reservation portal (Next.js) | 3001 | \`${INSTALL_DIR}/apps/llka-resomaker/\` |\n` : ''}
+## URLs
+
+- LLKA-B admin: ${baseUrl}:8090/_/
+${hasV ? `- LLKA-V: ${domain ? `${baseUrl}/` : `${baseUrl}:3000`}\n` : ''}${hasR ? `- LLKA-R: ${domain ? `${baseUrl}/reservierung` : `${baseUrl}:3001`}\n` : ''}- Admin email: ${adminEmail}
+
+## Key Files
+
+- **Config**: \`${INSTALL_DIR}/config.env\` — all install-time choices
+- **Database**: \`${INSTALL_DIR}/pocketbase/pb_data/data.db\` — SQLite, back this up
+- **PB Hooks**: \`${INSTALL_DIR}/pocketbase/pb_hooks/\` — server-side JS hooks
+- **PB Migrations**: \`${INSTALL_DIR}/pocketbase/pb_migrations/\` — schema migrations
+${hasV ? `- **LLKA-V env**: \`${INSTALL_DIR}/apps/llka-verwaltung/.env.local\`\n` : ''}${hasR ? `- **LLKA-R env**: \`${INSTALL_DIR}/apps/llka-resomaker/.env.local\`\n` : ''}${networking === 'caddy' ? `- **Caddyfile**: \`${INSTALL_DIR}/caddy/Caddyfile\`\n` : ''}${networking === 'cloudflared' ? `- **Tunnel config**: \`${INSTALL_DIR}/cloudflared-config.yml\`\n` : ''}
+## Runtime
+
+- **Runtime**: ${runtime}
+- **Networking**: ${networking}
+${domain ? `- **Domain**: ${domain}\n` : '- **Domain**: none (localhost only)\n'}
+## Common Tasks
+
+### Update all components
+\`\`\`bash
+npx llka-deploy@latest
+# Select "Update all components"
+\`\`\`
+
+### Restart services (Linux)
+\`\`\`bash
+systemctl --user restart leihbackend
+${hasV ? 'systemctl --user restart llka-verwaltung\n' : ''}${hasR ? 'systemctl --user restart llka-resomaker\n' : ''}\`\`\`
+
+### Check service status (Linux)
+\`\`\`bash
+systemctl --user status leihbackend
+${hasV ? 'systemctl --user status llka-verwaltung\n' : ''}${hasR ? 'systemctl --user status llka-resomaker\n' : ''}\`\`\`
+
+### View logs (Linux)
+\`\`\`bash
+journalctl --user -u leihbackend -f
+${hasV ? 'journalctl --user -u llka-verwaltung -f\n' : ''}${hasR ? 'journalctl --user -u llka-resomaker -f\n' : ''}\`\`\`
+
+### Back up the database
+\`\`\`bash
+cp ${INSTALL_DIR}/pocketbase/pb_data/data.db ~/data-backup-$(date +%Y%m%d).db
+\`\`\`
+
+### Rebuild LLKA-V after config change
+\`\`\`bash
+cd ${INSTALL_DIR}/apps/llka-verwaltung
+${runtime === 'bun' ? 'bun run build' : 'npm run build'}
+systemctl --user restart llka-verwaltung  # Linux only
+\`\`\`
+
+${hasR ? `### Rebuild LLKA-R after config change
+\`\`\`bash
+cd ${INSTALL_DIR}/apps/llka-resomaker
+${runtime === 'bun' ? 'bun run build' : 'npm run build'}
+systemctl --user restart llka-resomaker  # Linux only
+\`\`\`
+` : ''}
+### PocketBase API
+The PocketBase API is at \`${baseUrl}:8090/api/\`. Collections can be managed
+via the admin UI at \`${baseUrl}:8090/_/\` or via the REST API. The \`settings\`
+collection holds the app config (name, tagline, opening hours, colors).
+
+### Import data
+- **CSV import**: Use the LLKA-B admin UI (Collections → Import)
+- **API import**: POST to \`${baseUrl}:8090/api/collections/{collection}/records\`
+- **Direct SQL**: \`sqlite3 ${INSTALL_DIR}/pocketbase/pb_data/data.db\`
+
+## Caution
+
+- Always back up \`pb_data/data.db\` before making schema changes
+- The \`NEXT_PUBLIC_*\` env vars in \`.env.local\` are baked in at build time — rebuild after changing them
+- PocketBase hooks in \`pb_hooks/\` are loaded at startup — restart LLKA-B after editing
+`
+
+  writeFileSync(resolve(INSTALL_DIR, 'CLAUDE.md'), content)
+  p.log.success(`CLAUDE.md generated at ${INSTALL_DIR}/CLAUDE.md`)
 }
 
 main().catch((err) => {

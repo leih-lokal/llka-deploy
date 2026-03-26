@@ -165,6 +165,50 @@ function seedSettings(token: string): void {
   p.log.success('Settings seeded')
 }
 
+function configureEmailTemplates(token: string): void {
+  p.log.info('Configuring email templates...')
+
+  const appName = configRead('LLKA_APP_NAME', 'leih.lokal')
+  const domain = configRead('LLKA_DOMAIN', '')
+  const appUrl = domain ? `https://${domain}` : 'http://localhost:3000'
+
+  const templates = {
+    meta: {
+      appName,
+      appURL: appUrl,
+      senderName: appName,
+      senderAddress: `noreply@${domain || 'localhost'}`,
+    },
+    // Verification email
+    verificationTemplate: {
+      subject: `${appName} — E-Mail bestätigen / Verify your email`,
+      body: `<p>Hallo,</p><p>Bitte bestätigen Sie Ihre E-Mail-Adresse für <strong>${appName}</strong>.</p><p>Please verify your email address for <strong>${appName}</strong>.</p><p><a href="{ACTION_URL}">E-Mail bestätigen / Verify email</a></p><p>Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren.</p><p>If you did not request this, you can ignore this email.</p><p>— ${appName}</p>`,
+      actionURL: `${appUrl}/api/verification/{TOKEN}`,
+    },
+    // Password reset
+    resetPasswordTemplate: {
+      subject: `${appName} — Passwort zurücksetzen / Reset your password`,
+      body: `<p>Hallo,</p><p>Sie haben ein neues Passwort für <strong>${appName}</strong> angefordert.</p><p>You requested a password reset for <strong>${appName}</strong>.</p><p><a href="{ACTION_URL}">Passwort zurücksetzen / Reset password</a></p><p>Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren.</p><p>If you did not request this, you can ignore this email.</p><p>— ${appName}</p>`,
+      actionURL: `${appUrl}/api/password-reset/{TOKEN}`,
+    },
+    // Email change confirmation
+    confirmEmailChangeTemplate: {
+      subject: `${appName} — E-Mail-Änderung bestätigen / Confirm email change`,
+      body: `<p>Hallo,</p><p>Bitte bestätigen Sie die Änderung Ihrer E-Mail-Adresse für <strong>${appName}</strong>.</p><p>Please confirm your email change for <strong>${appName}</strong>.</p><p><a href="{ACTION_URL}">E-Mail-Änderung bestätigen / Confirm email change</a></p><p>Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren.</p><p>If you did not request this, you can ignore this email.</p><p>— ${appName}</p>`,
+      actionURL: `${appUrl}/api/confirm-email-change/{TOKEN}`,
+    },
+  }
+
+  const payload = JSON.stringify(templates)
+
+  try {
+    exec(`curl -fsSL "${PB_URL}/api/settings" -X PATCH -H "Content-Type: application/json" -H "Authorization: ${token}" -d '${payload}'`)
+    p.log.success('Email templates configured')
+  } catch {
+    p.log.warn('Could not configure email templates — you can set them manually in LLKA-B admin')
+  }
+}
+
 export async function runAdminSetup(): Promise<void> {
   startPocketBase()
 
@@ -174,6 +218,7 @@ export async function runAdminSetup(): Promise<void> {
     const token = getAuthToken(email, password)
     createSettingsCollection(token)
     seedSettings(token)
+    configureEmailTemplates(token)
   } finally {
     stopPocketBase()
   }
